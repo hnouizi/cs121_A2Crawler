@@ -1,7 +1,23 @@
 import re
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+BLUE_TEXT = "\033[34m"
+GREEN_TEXT = "\033[32m"
+RED_TEXT = "\033[31m"
+RESET_TEXT = "\033[0m"
 
 def scraper(url, resp):
+    # print terminal text
+    print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
+    if (resp.status != 200):
+        print(f"{RED_TEXT}{resp.status}{RESET_TEXT}")
+    else:
+        print(f"{GREEN_TEXT}{resp.status}{RESET_TEXT}")
+
+    # return an empty list if page couldn't be reached
+    if (resp.status != 200):
+        return []
+        
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
@@ -15,7 +31,20 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+
+    # print terminal text
+    print(f"{GREEN_TEXT}extracting links...{RESET_TEXT}")
+
+    # parse the web page
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+
+    # find all links on the current web page
+    extracted_links = []
+    for link in soup.find_all('a'):
+        extracted_links.append(link.get('href'))
+
+    return extracted_links
+
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
