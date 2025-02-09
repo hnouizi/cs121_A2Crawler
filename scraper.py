@@ -19,6 +19,11 @@ def scraper(url, resp):
     if (resp.status != 200):
         return []
 
+    # check if url has already been found
+    if (url.split('?')[0] in found_urls):
+        print(f"{RED_TEXT}{url.split('?')[0]} already found{RESET_TEXT}")
+        return []
+
     # add the url (without query or fragment) to found urls
     url_before_query = url.split('?')[0]
     found_urls.add(url_before_query)
@@ -61,14 +66,12 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
 
-        # check if url has already been found
-        if (url.split('?')[0] in found_urls):
-            print(f"{RED_TEXT}{url.split('?')[0]} already found {RESET_TEXT}")
-            return False
-
         # check if the domain is valid
         domain1 = parsed.hostname
-        domain2 = ".".join(parsed.hostname.split('.')[1:])
+        domain2 = ""
+
+        if (parsed.hostname is not None):
+            domain2 = ".".join(parsed.hostname.split('.')[1:])
         
         if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
             return False
