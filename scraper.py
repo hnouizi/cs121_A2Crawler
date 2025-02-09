@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
@@ -32,9 +32,6 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
-    # print terminal text
-    print(f"{GREEN_TEXT}extracting links...{RESET_TEXT}")
-
     # parse the web page
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
 
@@ -54,6 +51,15 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
+
+        # check if the domain is valid
+        domain1 = ".".join(parsed.hostname.split('.'))
+        domain2 = ".".join(parsed.hostname.split('.')[1:])
+        
+        if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
+            print(f"invalid domain detected: {RED_TEXT}{url}{RESET_TEXT}")
+            return False
+        
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
