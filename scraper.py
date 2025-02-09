@@ -5,6 +5,7 @@ BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
 RED_TEXT = "\033[31m"
 RESET_TEXT = "\033[0m"
+found_urls = set()
 
 def scraper(url, resp):
     # print terminal text
@@ -17,6 +18,10 @@ def scraper(url, resp):
     # return an empty list if page couldn't be reached
     if (resp.status != 200):
         return []
+
+    # add the url (without query or fragment) to found urls
+    url_before_query = url.split('?')[0]
+    found_urls.add(url_before_query)
         
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
@@ -37,13 +42,9 @@ def extract_next_links(url, resp):
 
     # find all links on the current web page
     extracted_links = []
-    for link in soup.find_all('a'):
+    for link in soup.find_all('a'): 
         # remove fragment from the link
         extracted_link = urldefrag(link.get('href')).url
-
-        if (link.get('href') != extracted_link):
-            print(f"{RED_TEXT}full url: {link.get('href')}{RESET_TEXT}")
-            print(f"{RED_TEXT}defragmented url: {extracted_link}{RESET_TEXT}")
         
         # add the defragmented link to extracted links list
         extracted_links.append(extracted_link)
@@ -60,12 +61,16 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
 
+        # check if url has already been found
+        if (url.split('?')[0] in found_urls):
+            print(f"{RED_TEXT}{url.split('?')[0]} already found {RESET_TEXT}")
+            return False
+
         # check if the domain is valid
-        domain1 = ".".join(parsed.hostname.split('.'))
+        domain1 = parsed.hostname
         domain2 = ".".join(parsed.hostname.split('.')[1:])
         
         if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
-            # print(f"invalid domain detected: {RED_TEXT}{url}{RESET_TEXT}")
             return False
         
         return not re.match(
