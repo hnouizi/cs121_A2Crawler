@@ -38,7 +38,15 @@ def extract_next_links(url, resp):
     # find all links on the current web page
     extracted_links = []
     for link in soup.find_all('a'):
-        extracted_links.append(link.get('href'))
+        # remove fragment from the link
+        extracted_link = urldefrag(link.get('href')).url
+
+        if (link.get('href') != extracted_link):
+            print(f"{RED_TEXT}full url: {link.get('href')}{RESET_TEXT}")
+            print(f"{RED_TEXT}defragmented url: {extracted_link}{RESET_TEXT}")
+        
+        # add the defragmented link to extracted links list
+        extracted_links.append(extracted_link)
 
     return extracted_links
 
@@ -57,7 +65,7 @@ def is_valid(url):
         domain2 = ".".join(parsed.hostname.split('.')[1:])
         
         if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
-            print(f"invalid domain detected: {RED_TEXT}{url}{RESET_TEXT}")
+            # print(f"invalid domain detected: {RED_TEXT}{url}{RESET_TEXT}")
             return False
         
         return not re.match(
