@@ -4,6 +4,14 @@ class Report:
         self.urls = set()
         self.ics_subdomains = dict()
 
+    def urls(self):
+        """Returns a dictionary of all URLs scraped."""
+        return self.urls
+    
+    def add_url(self, url):
+        """Adds a url to the set of urls."""
+        self.urls.add(url)
+
     def ics_subdomains(self):
         """Returns a dictionary of ICS subdomains and how many times each has appeared."""
         return self.ics_subdomains
@@ -16,4 +24,3 @@ class Report:
 
         # increment subdomain count
         self.ics_subdomains[subdomain] += 1
-

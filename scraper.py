@@ -33,6 +33,7 @@ def get_subdomain(url):
         return ""
     
     hostname_list = parsed_url.hostname.split('.')
+    domain_list = hostname_list
 
     if (len(hostname_list) == 4):
         return hostname_list[0]
@@ -54,10 +55,13 @@ def scraper(url, resp, report):
 
     # check if url is in ics domain
     if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
-        print(f"{YELLOW_TEXT} ICS subdomain found!: {get_subdomain(url)}{RESET_TEXT}")
         report.add_ics_subdomain(get_subdomain(url))
-        print(f"{report.ics_subdomains})")
-        
+
+    # add url to set
+    print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
+    report.add_url(url)
+
+    # extract links
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
