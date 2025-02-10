@@ -33,7 +33,6 @@ def get_subdomain(url):
         return ""
     
     hostname_list = parsed_url.hostname.split('.')
-    domain_list = hostname_list
 
     if (len(hostname_list) == 4):
         return hostname_list[0]
@@ -96,13 +95,13 @@ def path_contains_dates(parsed_url):
         possible_date_2 = parsed_url.path.split('/')[-2].split('-')
 
     if (len(possible_date_1) > 0 and possible_date_1[0] != ''):
-         if len(possible_date_1) == 3:
-             if possible_date_1[0].isdigit() and possible_date_1[1].isdigit() and possible_date_1[2].isdigit():
+         if len(possible_date_1) >= 2:
+             if possible_date_1[0].isdigit() and possible_date_1[1].isdigit():
                  print(f"{YELLOW_TEXT}date: {possible_date_1}{RESET_TEXT}")
                  return True
     elif (len(possible_date_2) > 0 and possible_date_2[0] != ''):
-        if len(possible_date_2) == 3:
-             if possible_date_2[0].isdigit() and possible_date_2[1].isdigit() and possible_date_2[2].isdigit():
+        if len(possible_date_2) >= 2:
+             if possible_date_2[0].isdigit() and possible_date_2[1].isdigit():
                  print(f"{YELLOW_TEXT}date: {possible_date_2}{RESET_TEXT}")
                  return True
 
