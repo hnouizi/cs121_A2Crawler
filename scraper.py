@@ -1,6 +1,7 @@
 import re
 from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
+from report import Report
 BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
 RED_TEXT = "\033[31m"
@@ -8,8 +9,39 @@ YELLOW_TEXT = "\033[1;33m"
 RESET_TEXT = "\033[0m"
 found_urls = set()
     
+def get_domain(url):
+    parsed_url = urlparse(url)
 
-def scraper(url, resp):
+    # check if hostname exists
+    if (parsed_url.hostname is None):
+        return ""
+        
+    hostname_list = parsed_url.hostname.split('.')
+    domain_list = hostname_list
+
+    # check if hostname has a subdomain
+    if (len(hostname_list) == 4):
+        domain_list = hostname_list[1:]
+
+    return '.'.join(domain_list)
+
+def get_subdomain(url):
+    parsed_url = urlparse(url)
+
+    # check if hostname exists
+    if (parsed_url.hostname is None):
+        return ""
+    
+    hostname_list = parsed_url.hostname.split('.')
+    domain_list = hostname_list
+
+    if (len(hostname_list) == 4):
+        return hostname_list[0]
+
+    return None
+    
+    
+def scraper(url, resp, report):
     # print terminal text
     print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
     if (resp.status != 200):
@@ -20,6 +52,12 @@ def scraper(url, resp):
     # return an empty list if page couldn't be reached
     if (resp.status != 200):
         return []
+
+    # check if url is in ics domain
+    if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
+        print(f"{YELLOW_TEXT} ICS subdomain found!: {get_subdomain(url)}{RESET_TEXT}")
+        report.add_ics_subdomain(get_subdomain(url))
+        print(f"{report.ics_subdomains})")
         
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
@@ -80,20 +118,14 @@ def is_valid(url):
             return False
 
         # check if the domain is valid
-        domain1 = parsed.hostname
-        domain2 = ""
-
-        if (parsed.hostname is not None):
-            domain2 = ".".join(parsed.hostname.split('.')[1:])
-        
-        if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
+        if (get_domain(url) not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
             return False
 
         # check if url has already been found
         if (url.split('?')[0] in found_urls):
             return False
 
-        # check for dates to avoid crawler traps (not tested)
+        # check for dates to avoid crawler traps
         if (path_contains_dates(parsed)):
             return False
         
