@@ -4,8 +4,10 @@ from bs4 import BeautifulSoup
 BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
 RED_TEXT = "\033[31m"
+YELLOW_TEXT = "\033[1;33m"
 RESET_TEXT = "\033[0m"
 found_urls = set()
+    
 
 def scraper(url, resp):
     # print terminal text
@@ -18,15 +20,6 @@ def scraper(url, resp):
     # return an empty list if page couldn't be reached
     if (resp.status != 200):
         return []
-
-    # check if url has already been found
-    if (url.split('?')[0] in found_urls):
-        print(f"{RED_TEXT}{url.split('?')[0]} already found{RESET_TEXT}")
-        return []
-
-    # add the url (without query or fragment) to found urls
-    url_before_query = url.split('?')[0]
-    found_urls.add(url_before_query)
         
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
@@ -56,6 +49,26 @@ def extract_next_links(url, resp):
 
     return extracted_links
 
+def path_contains_dates(parsed_url):
+    possible_date_1 = []
+    possible_date_2 = []
+
+    if (len(parsed_url.path.split('/')) >= 2):
+        possible_date_1 = parsed_url.path.split('/')[-1].split('-')
+        possible_date_2 = parsed_url.path.split('/')[-2].split('-')
+
+    if (len(possible_date_1) > 0 and possible_date_1[0] != ''):
+         if len(possible_date_1) == 3:
+             if possible_date_1[0].isdigit() and possible_date_1[1].isdigit() and possible_date_1[2].isdigit():
+                 print(f"{YELLOW_TEXT}date: {possible_date_1}{RESET_TEXT}")
+                 return True
+    elif (len(possible_date_2) > 0 and possible_date_2[0] != ''):
+        if len(possible_date_2) == 3:
+             if possible_date_2[0].isdigit() and possible_date_2[1].isdigit() and possible_date_2[2].isdigit():
+                 print(f"{YELLOW_TEXT}date: {possible_date_2}{RESET_TEXT}")
+                 return True
+
+    return False
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -75,8 +88,16 @@ def is_valid(url):
         
         if (domain1 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])) and (domain2 not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
             return False
+
+        # check if url has already been found
+        if (url.split('?')[0] in found_urls):
+            return False
+
+        # check for dates to avoid crawler traps (not tested)
+        if (path_contains_dates(parsed)):
+            return False
         
-        return not re.match(
+        if (re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
@@ -84,7 +105,13 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())):
+                return False
+
+        # add url to found list
+        found_urls.add(url.split('?')[0])
+        
+        return True
 
     except TypeError:
         print ("TypeError for ", parsed)
