@@ -53,13 +53,32 @@ def scraper(url, resp, report):
     if (resp.status != 200):
         return []
 
+    # add url to set
+    # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
+    report.add_url(url)
+
+    # parse the webpage
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+
+    # get webpage text & ignore non-text elements (credit: bumpkin on StackOverflow)
+    for non_text_elements in soup(["script", "style"]):
+        non_text_elements.extract()
+
+    # format the text content
+    text = soup.get_text()
+    lines = text.splitlines()
+    text = ' '.join(line for line in lines if line) # remove unecessary whitespace
+    words = text.split()
+
+    # check if url has the most words
+    if (report.is_longest_page(len(words))):
+        report.set_longest_page(url, len(words))
+        print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page["url"]}, word count: {report.longest_page["count"]}{RESET_TEXT}")
+
     # check if url is in ics domain
     if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
+        # print(f"{YELLOW_TEXT}updated ics subdomains: {report.ics_subdomains}){RESET_TEXT}")
         report.add_ics_subdomain(get_subdomain(url))
-
-    # add url to set
-    print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
-    report.add_url(url)
 
     # extract links
     links = extract_next_links(url, resp)
@@ -101,12 +120,12 @@ def path_contains_dates(parsed_url):
     if (len(possible_date_1) > 0 and possible_date_1[0] != ''):
          if len(possible_date_1) >= 2:
              if possible_date_1[0].isdigit() and possible_date_1[1].isdigit():
-                 print(f"{YELLOW_TEXT}date: {possible_date_1}{RESET_TEXT}")
+                 # print(f"{YELLOW_TEXT}date: {possible_date_1}{RESET_TEXT}")
                  return True
     elif (len(possible_date_2) > 0 and possible_date_2[0] != ''):
         if len(possible_date_2) >= 2:
              if possible_date_2[0].isdigit() and possible_date_2[1].isdigit():
-                 print(f"{YELLOW_TEXT}date: {possible_date_2}{RESET_TEXT}")
+                 # print(f"{YELLOW_TEXT}date: {possible_date_2}{RESET_TEXT}")
                  return True
 
     return False
@@ -122,14 +141,17 @@ def is_valid(url):
 
         # check if the domain is valid
         if (get_domain(url) not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
+            # print(f"{RED_TEXT}{url}{RESET_TEXT}: invalid domain")
             return False
 
         # check if url has already been found
         if (url.split('?')[0] in found_urls):
+            # print(f"{RED_TEXT}{url}{RESET_TEXT}: already crawled")
             return False
 
         # check for dates to avoid crawler traps
         if (path_contains_dates(parsed)):
+            # print(f"{RED_TEXT}{url}{RESET_TEXT}: contains individual dates/months")
             return False
         
         if (re.match(
@@ -145,7 +167,7 @@ def is_valid(url):
 
         # add url to found list
         found_urls.add(url.split('?')[0])
-        
+        # print(f"{GREEN_TEXT}adding {url}{RESET_TEXT}")
         return True
 
     except TypeError:
