@@ -38,8 +38,7 @@ def get_subdomain(url):
     if (len(hostname_list) == 4):
         return hostname_list[0]
 
-    return None
-    
+    return None    
     
 def scraper(url, resp, report):
     # print terminal text
@@ -57,17 +56,18 @@ def scraper(url, resp, report):
     # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
     report.add_url(url)
 
-    # parse the webpage
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-
     # get webpage text & ignore non-text elements (credit: bumpkin on StackOverflow)
     for non_text_elements in soup(["script", "style"]):
         non_text_elements.extract()
 
-    # format the text content
     text = soup.get_text()
     lines = text.splitlines()
+
+    # create a string of words in the webpage separated by spaces
     text = ' '.join(line for line in lines if line) # remove unecessary whitespace
+
+    # create a list of words in the webpage
     words = text.split()
 
     # check if url has the most words
@@ -104,29 +104,26 @@ def extract_next_links(url, resp):
         # remove fragment from the link
         extracted_link = urldefrag(link.get('href')).url
         
-        # add the defragmented link to extracted links list
+        # add the defragmented link to the extracted links list
         extracted_links.append(extracted_link)
 
     return extracted_links
 
-def path_contains_dates(parsed_url):
-    possible_date_1 = []
-    possible_date_2 = []
+def path_contains_individual_events(parsed_url):
+    path_list = parsed_url.path.split('/')
+    path_list = [path for path in path_list if path]
 
-    if (len(parsed_url.path.split('/')) >= 2):
-        possible_date_1 = parsed_url.path.split('/')[-1].split('-')
-        possible_date_2 = parsed_url.path.split('/')[-2].split('-')
+    if "events" in path_list:
+        if path_list[-1] == "events":
+            return False
 
-    if (len(possible_date_1) > 0 and possible_date_1[0] != ''):
-         if len(possible_date_1) >= 2:
-             if possible_date_1[0].isdigit() and possible_date_1[1].isdigit():
-                 # print(f"{YELLOW_TEXT}date: {possible_date_1}{RESET_TEXT}")
-                 return True
-    elif (len(possible_date_2) > 0 and possible_date_2[0] != ''):
-        if len(possible_date_2) >= 2:
-             if possible_date_2[0].isdigit() and possible_date_2[1].isdigit():
-                 # print(f"{YELLOW_TEXT}date: {possible_date_2}{RESET_TEXT}")
-                 return True
+        return True
+
+    if "event" in path_list:
+        if path_list[-1] == "event":
+            return False
+
+        return True
 
     return False
 
@@ -149,8 +146,8 @@ def is_valid(url):
             # print(f"{RED_TEXT}{url}{RESET_TEXT}: already crawled")
             return False
 
-        # check for dates to avoid crawler traps
-        if (path_contains_dates(parsed)):
+        # check for individual events
+        if (path_contains_individual_events(parsed)):
             # print(f"{RED_TEXT}{url}{RESET_TEXT}: contains individual dates/months")
             return False
         
