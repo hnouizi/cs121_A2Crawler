@@ -70,10 +70,14 @@ def scraper(url, resp, report):
     # create a list of words in the webpage
     words = text.split()
 
+    #anything that is not alphanumeric is split and frequencies are counted
+    report.set_frequency(re.split("[^a-zA-Z0-9]", text))
+    #print(report.get_most_common())
+
     # check if url has the most words
     if (report.is_longest_page(len(words))):
         report.set_longest_page(url, len(words))
-        print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page["url"]}, word count: {report.longest_page["count"]}{RESET_TEXT}")
+        print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page['url']}, word count: {report.longest_page['count']}{RESET_TEXT}")
 
     # check if url is in ics domain
     if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
