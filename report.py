@@ -1,9 +1,21 @@
+import re
+import nltk
+from nltk.corpus import stopwords
+
+#can we import re?
+#can we import ntlk?
+
+nltk.download("stopwords")
+STOP = set(stopwords.words("english"))
+#up here cause i dont want to keep downloading it?
+
 class Report:
     def __init__(self):
         """Initialize variables."""
         self.urls = set()
         self.longest_page = {"url": '', "count": 0}
         self.ics_subdomains = dict()
+        self.frequent_words = dict() #should this be sorted already
 
     def ics_subdomains(self):
         """Returns a dictionary of ICS subdomains and how many times each has appeared."""
@@ -37,3 +49,24 @@ class Report:
         """Set the url and word count of the longest page."""
         self.longest_page["url"] = url
         self.longest_page["count"] = count
+
+    def set_frequency(self, text):
+        """Add words to the frequent words dict."""
+        #things to consider: single characters, duplicates, grammar, uppercase, NUMBERS, STOP WORDS other
+        #skips stop words, non alpha, single char tokens
+        regex = re.compile("[^a-zA-Z0-9]")
+        for word in text:
+            if word.isascii() == False:
+                continue
+            if len(word) <=1:
+                continue
+            if word in STOP:
+                continue
+            token = regex.sub('', word.lower())
+            if(token in self.frequent_words.keys()):
+                self.frequent_words[token] += 1
+            else:
+                self.frequent_words[token] = 1 
+
+    def get_most_common(self) -> dict:
+        return {k: v for k, v in sorted(self.frequent_words.items(), key=lambda item: item[1], reverse = True)[:50]}
