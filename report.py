@@ -52,6 +52,7 @@ class Report:
         #skips stop words, non alpha, single char tokens
         regex = re.compile("[^a-zA-Z0-9]")
         for word in text:
+            word = word.lower().strip()
             if word.isascii() == False:
                 continue
             if len(word) <=1:
