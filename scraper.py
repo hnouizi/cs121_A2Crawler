@@ -109,7 +109,7 @@ def extract_next_links(url, resp):
     extracted_links = []
     for link in soup.find_all('a'): 
         if (link.get('rel') is not None):
-            # don't extract links with "nofollow"
+            # don't extract thinks with "nofollow"
             if ("nofollow" in link.get('rel')):
                 continue
         # remove fragment from the link
@@ -181,3 +181,6 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+    except ValueError:
+        return False
