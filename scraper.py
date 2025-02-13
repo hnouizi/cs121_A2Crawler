@@ -44,11 +44,13 @@ def get_subdomain(url):
 def scraper(url, resp, report:Report):
     # print terminal text
     print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
-    if (resp.status != 200):
+    if (resp.status >= 300) and (resp.status < 400):
+        print(f"{YELLOW_TEXT}{resp.status}{RESET_TEXT}")
+    elif (resp.status != 200):
         print(f"{RED_TEXT}{resp.status}{RESET_TEXT}")
     else:
         print(f"{GREEN_TEXT}{resp.status}{RESET_TEXT}")
-
+        
     # return an empty list if page couldn't be reached
     if (resp.status != 200):
         return []
@@ -106,6 +108,10 @@ def extract_next_links(url, resp):
     # find all links on the current web page
     extracted_links = []
     for link in soup.find_all('a'): 
+        if (link.get('rel') is not None):
+            # don't extract links with "nofollow"
+            if ("nofollow" in link.get('rel')):
+                continue
         # remove fragment from the link
         extracted_link = urldefrag(link.get('href')).url
         
@@ -146,7 +152,7 @@ def is_valid(url):
             # print(f"{RED_TEXT}{url}{RESET_TEXT}: invalid domain")
             return False
 
-        # check if url has already been found
+        # check if the url (without the query string) has already been found
         if (url.split('?')[0] in found_urls):
             # print(f"{RED_TEXT}{url}{RESET_TEXT}: already crawled")
             return False
