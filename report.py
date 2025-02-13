@@ -2,12 +2,8 @@ import re
 import nltk
 from nltk.corpus import stopwords
 
-#can we import re?
-#can we import ntlk?
-
 nltk.download("stopwords")
 STOP = set(stopwords.words("english"))
-#up here cause i dont want to keep downloading it?
 
 class Report:
     def __init__(self):
@@ -15,9 +11,9 @@ class Report:
         self.urls = set()
         self.longest_page = {"url": '', "count": 0}
         self.ics_subdomains = dict()
-        self.frequent_words = dict() #should this be sorted already
+        self.frequent_words = dict()
 
-    def ics_subdomains(self):
+    def get_ics_subdomains(self):
         """Returns a dictionary of ICS subdomains and how many times each has appeared."""
         return self.ics_subdomains
 
@@ -30,7 +26,7 @@ class Report:
         # increment subdomain count
         self.ics_subdomains[subdomain] += 1
 
-    def urls(self):
+    def get_urls(self):
         """Returns a dictionary of all URLs scraped."""
         return self.urls
     
@@ -70,3 +66,22 @@ class Report:
 
     def get_most_common(self) -> dict:
         return {k: v for k, v in sorted(self.frequent_words.items(), key=lambda item: item[1], reverse = True)[:50]}
+
+    def print_report(self):
+        """Prints the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain."""
+        print("\n== REPORT ==")
+        print(f"number of unique pages: {len(self.urls)}")
+        print(f"longest page: {self.longest_page["url"]}")
+        print(f"top 50 words:")
+        top_50_words = self.get_most_common()
+
+        for i in range(len(top_50_words)):
+            word = list(top_50_words.keys())[i]
+            print(f"  {i+1}: {word}, {top_50_words[word]}")
+
+        print(f"number of ics.uci.edu subdomains: {len(self.ics_subdomains)}")
+
+        for i in range(len(self.ics_subdomains)):
+            subdomain = list(self.ics_subdomains.keys())[i]
+            print(f"  {i+1}: {subdomain}, {self.ics_subdomains[subdomain]}")
+            

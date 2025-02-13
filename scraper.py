@@ -2,6 +2,7 @@ import re
 from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 from report import Report
+
 BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
 RED_TEXT = "\033[31m"
@@ -40,7 +41,7 @@ def get_subdomain(url):
 
     return None    
     
-def scraper(url, resp, report):
+def scraper(url, resp, report:Report):
     # print terminal text
     print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
     if (resp.status != 200):
@@ -72,12 +73,12 @@ def scraper(url, resp, report):
 
     #anything that is not alphanumeric is split and frequencies are counted
     report.set_frequency(re.split("[^a-zA-Z0-9]", text))
-    #print(report.get_most_common())
+    # print(f"{YELLOW_TEXT}words: {report.get_most_common()}{RESET_TEXT}")
 
     # check if url has the most words
     if (report.is_longest_page(len(words))):
         report.set_longest_page(url, len(words))
-        print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page['url']}, word count: {report.longest_page['count']}{RESET_TEXT}")
+        # print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page['url']}, word count: {report.longest_page['count']}{RESET_TEXT}")
 
     # check if url is in ics domain
     if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
