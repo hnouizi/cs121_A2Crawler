@@ -56,19 +56,6 @@ def scraper(url, resp, report:Report):
     # return an empty list if page couldn't be reached
     if (resp.status < 200) or (resp.status >= 300):
         return []
-    
-    # return an empty list if content is similar to other pages using simhash
-    cur_hash = sh.simhash(text)
-    for (next_url, next_hash) in simhashes.items():
-        if (sh.compute_similarity(cur_hash, next_hash) >= sh.THRESH):
-            # print(f"{RED_TEXT}similar sites detected: {url} and {next_url}")
-            return []
-        
-    simhashes[url] = cur_hash
-
-    # add url to set
-    # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
-    report.add_url(url)
 
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     # get webpage text & ignore non-text elements (credit: bumpkin on StackOverflow)
@@ -80,6 +67,22 @@ def scraper(url, resp, report:Report):
 
     # create a string of words in the webpage separated by spaces
     text = ' '.join(line for line in lines if line) # remove unecessary whitespace
+
+    # return an empty list if content is similar to other pages using simhash
+    cur_hash = sh.simhash(text)
+    for (next_url, next_hash) in simhashes.items():
+        if (sh.compute_similarity(cur_hash, next_hash) >= sh.THRESH):
+            # print(f"{RED_TEXT}similar sites detected: {url} and {next_url}{RESET_TEXT}")
+            # print(f"similarity: {sh.compute_similarity(cur_hash, next_hash)}")
+            # print(text)
+            return []
+
+    # add simhash to dictionary
+    simhashes[url] = cur_hash
+
+    # add url to set
+    # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
+    report.add_url(url)
 
     # create a list of words in the webpage
     words = text.split()

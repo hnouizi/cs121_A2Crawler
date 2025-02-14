@@ -6,7 +6,7 @@ from nltk.corpus import stopwords
 nltk.download("stopwords")
 STOP = set(stopwords.words("english"))
 BITS = 64
-THRESH = 0.9
+THRESH = 0.95
 
 def create_64_bit_hash(string:str):
     """Converts a string into a 64 bit binary hash."""
