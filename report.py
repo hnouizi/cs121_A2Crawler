@@ -100,7 +100,7 @@ class Report:
 
             print(f"4. number of ics.uci.edu subdomains: {len(self.ics_subdomains)}", file=report_file)
 
-            sorted_subdomains = {k: v for k, v in sorted(self.ics_subdomains.items(), key=lambda item: item[1], reverse = True)[:50]}
+            sorted_subdomains = {k: v for k, v in sorted(self.ics_subdomains.items(), key=lambda item: item[1], reverse = True)}
             for i in range(len(sorted_subdomains)):
                 subdomain = list(sorted_subdomains.keys())[i]
                 print(f"  {i+1}: {subdomain}, {sorted_subdomains[subdomain]}", file=report_file)
