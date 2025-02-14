@@ -10,8 +10,12 @@ RED_TEXT = "\033[31m"
 YELLOW_TEXT = "\033[1;33m"
 RESET_TEXT = "\033[0m"
 
-found_urls = set()
+urls_no_query = set()
 simhashes = dict()
+
+MAX_WORD_COUNT = 10000 # NOT TESTED
+MIN_WORD_COUNT = 10 # NOT TESTED
+CHAR_PER_WORD_THRESH = [4, 7]
     
 def get_domain(url):
     parsed_url = urlparse(url)
@@ -53,11 +57,28 @@ def scraper(url, resp, report:Report):
     else:
         print(f"{GREEN_TEXT}{resp.status}{RESET_TEXT}")
         
-    # return an empty list if page couldn't be reached
+    # don't scrape if page couldn't be reached
     if (resp.status < 200) or (resp.status >= 300):
         return []
 
+    # don't scrape if there's no content
+    if (resp.raw_response.content is None):
+        return []
+
+    # add url to set of all unique urls
+    # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
+    report.add_url(url)
+
+    # don't scrape if the url (without the query string) has already been found
+    if (url.split('?')[0] in urls_no_query):
+        # print(f"{RED_TEXT}{url.split('?')[0]}{RESET_TEXT}: already crawled")
+        return []
+
+    # add url to urls (without query strings)
+    urls_no_query.add(url.split('?')[0])
+
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    
     # get webpage text & ignore non-text elements (credit: bumpkin on StackOverflow)
     for non_text_elements in soup(["script", "style"]):
         non_text_elements.extract()
@@ -68,7 +89,28 @@ def scraper(url, resp, report:Report):
     # create a string of words in the webpage separated by spaces
     text = ' '.join(line for line in lines if line) # remove unecessary whitespace
 
-    # return an empty list if content is similar to other pages using simhash
+    # create a list of words in the webpage
+    words = re.split("[^a-zA-Z0-9]", text)
+
+    # don't scrape if the page is too small
+    if len(words) < MIN_WORD_COUNT:
+        return []
+        
+    # don't scrape if the page is too large
+    if len(words) >= MAX_WORD_COUNT:
+        return []
+
+    # don't scrape if page has low textual information content
+    if (len(text) / len(words) < CHAR_PER_WORD_THRESH[0]) or (len(text) / len(words) > CHAR_PER_WORD_THRESH[1]):
+        # print(f"{RED_TEXT}low information content found{RESET_TEXT}")
+        return []
+
+    # don't scrape if url contains individual events
+    if (path_contains_individual_events(urlparse(url))):
+        # print(f"{RED_TEXT}{url}{RESET_TEXT}: contains individual dates/months")
+        return []
+
+    # don't scrape if content is similar to other pages using simhash
     cur_hash = sh.simhash(text)
     for (next_url, next_hash) in simhashes.items():
         if (sh.compute_similarity(cur_hash, next_hash) >= sh.THRESH):
@@ -80,15 +122,8 @@ def scraper(url, resp, report:Report):
     # add simhash to dictionary
     simhashes[url] = cur_hash
 
-    # add url to set
-    # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
-    report.add_url(url)
-
-    # create a list of words in the webpage
-    words = text.split()
-
     #anything that is not alphanumeric is split and frequencies are counted
-    report.set_frequency(re.split("[^a-zA-Z0-9]", text))
+    report.set_frequency(words)
     # print(f"{YELLOW_TEXT}words: {report.get_most_common()}{RESET_TEXT}")
 
     # check if url has the most words
@@ -124,7 +159,7 @@ def extract_next_links(url, resp):
 
     # find all links on the current web page
     extracted_links = []
-    for link in soup.find_all('a'): 
+    for link in soup.find_all('a'):
         if (link.get('rel') is not None):
             # don't extract thinks with "nofollow"
             if ("nofollow" in link.get('rel')):
@@ -168,16 +203,6 @@ def is_valid(url):
         if (get_domain(url) not in set(["ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"])):
             # print(f"{RED_TEXT}{url}{RESET_TEXT}: invalid domain")
             return False
-
-        # check if the url (without the query string) has already been found
-        if (url.split('?')[0] in found_urls):
-            # print(f"{RED_TEXT}{url}{RESET_TEXT}: already crawled")
-            return False
-
-        # check for individual events
-        if (path_contains_individual_events(parsed)):
-            # print(f"{RED_TEXT}{url}{RESET_TEXT}: contains individual dates/months")
-            return False
         
         if (re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
@@ -190,9 +215,6 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())):
                 return False
 
-        # add url to found list
-        found_urls.add(url.split('?')[0])
-        # print(f"{GREEN_TEXT}adding {url}{RESET_TEXT}")
         return True
 
     except TypeError:
