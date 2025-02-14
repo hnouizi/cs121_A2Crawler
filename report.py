@@ -9,6 +9,7 @@ class Report:
     def __init__(self):
         """Initialize variables."""
         self.urls = set()
+        self.large_urls = set()
         self.longest_page = {"url": '', "count": 0}
         self.ics_subdomains = dict()
         self.frequent_words = dict()
@@ -34,6 +35,10 @@ class Report:
         """Adds a url to the set of urls."""
         self.urls.add(url)
 
+    def add_large_url(self, url):
+        """Adds a url to the set of urls."""
+        self.large_urls.add(url)
+    
     def is_longest_page(self, count):
         """Check if the number of words exceed the number of words of the current longest page."""
         if (count > self.longest_page["count"]):
@@ -66,7 +71,7 @@ class Report:
 
     def get_most_common(self) -> dict:
         return {k: v for k, v in sorted(self.frequent_words.items(), key=lambda item: item[1], reverse = True)[:50]}
-
+    
     def print_report(self):
         """Prints the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain."""
         print("\n== REPORT ==")

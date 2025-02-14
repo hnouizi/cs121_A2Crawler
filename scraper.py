@@ -1,4 +1,5 @@
 import re
+import http.client
 from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 from report import Report
@@ -9,6 +10,7 @@ RED_TEXT = "\033[31m"
 YELLOW_TEXT = "\033[1;33m"
 RESET_TEXT = "\033[0m"
 found_urls = set()
+large_files = set()
     
 def get_domain(url):
     parsed_url = urlparse(url)
@@ -59,6 +61,7 @@ def scraper(url, resp, report:Report):
     # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
     report.add_url(url)
 
+        
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     # get webpage text & ignore non-text elements (credit: bumpkin on StackOverflow)
     for non_text_elements in soup(["script", "style"]):
@@ -80,6 +83,7 @@ def scraper(url, resp, report:Report):
     # check if url has the most words
     if (report.is_longest_page(len(words))):
         report.set_longest_page(url, len(words))
+        print(report.large_urls)
         # print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page['url']}, word count: {report.longest_page['count']}{RESET_TEXT}")
 
     # check if url is in ics domain
@@ -172,7 +176,13 @@ def is_valid(url):
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())):
                 return False
-
+        """len = get_content_length1(parsed)
+        if len:
+            if is_large(len, 50):
+                # add url to large set
+                report.add_large_url(url)
+                return False"""
+        
         # add url to found list
         found_urls.add(url.split('?')[0])
         # print(f"{GREEN_TEXT}adding {url}{RESET_TEXT}")
@@ -181,3 +191,50 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+def get_content_length1(url): # basically chapgpt too, sigh ;-;
+    host = url.netloc
+    path = url.path if url.path else "/"
+
+    # Establish a connection to the host
+    if path.scheme == "http":
+        connection = http.client.HTTPConnection(host)  
+    else:
+        connection = http.client.HTTPSConnection(host) 
+    
+    try:
+        # Send a HEAD request to retrieve headers without the body
+        connection.request("HEAD", path)
+        
+        # Get the response
+        response = connection.getresponse()
+
+        content_length = response.getheader("Content-Length")
+        if content_length:
+            return int(content_length)
+    except TypeError:
+        print ("TypeError for ", parsed)
+        raise
+    finally:
+        # Close the connection
+        connection.close()
+
+
+#import urllib.request
+"""def get_content_length2(url): # chatgpt solution
+    try:
+        with urllib.request.urlopen(url) as response:
+            content_length = response.getheader('Content-Length')
+            return int(content_length) if content_length else None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+"""
+
+def is_large(content_length, threshhold):
+    threshhold_bytes = threshhold * 1024 * 1024
+    if content_length > threshhold_bytes:
+        return True  # The file is large
+    return False
+    
+
