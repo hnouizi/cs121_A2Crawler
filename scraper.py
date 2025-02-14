@@ -2,13 +2,16 @@ import re
 from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 from report import Report
+import simhash as sh
 
 BLUE_TEXT = "\033[34m"
 GREEN_TEXT = "\033[32m"
 RED_TEXT = "\033[31m"
 YELLOW_TEXT = "\033[1;33m"
 RESET_TEXT = "\033[0m"
+
 found_urls = set()
+simhashes = dict()
     
 def get_domain(url):
     parsed_url = urlparse(url)
@@ -53,6 +56,15 @@ def scraper(url, resp, report:Report):
     # return an empty list if page couldn't be reached
     if (resp.status < 200) or (resp.status >= 300):
         return []
+    
+    # return an empty list if content is similar to other pages using simhash
+    cur_hash = sh.simhash(text)
+    for (next_url, next_hash) in simhashes.items():
+        if (sh.compute_similarity(cur_hash, next_hash) >= sh.THRESH):
+            # print(f"{RED_TEXT}similar sites detected: {url} and {next_url}")
+            return []
+        
+    simhashes[url] = cur_hash
 
     # add url to set
     # print(f"adding url: {YELLOW_TEXT}{url}{RESET_TEXT}")
