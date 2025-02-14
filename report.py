@@ -69,7 +69,7 @@ class Report:
         return {k: v for k, v in sorted(self.frequent_words.items(), key=lambda item: item[1], reverse = True)[:50]}
 
     def print_report(self):
-        """Prints the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain."""
+        """Prints the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain to the console.."""
         print("\n== REPORT ==")
         print(f"number of unique pages: {len(self.urls)}")
         print(f"longest page: {self.longest_page["url"]}")
@@ -85,4 +85,23 @@ class Report:
         for i in range(len(self.ics_subdomains)):
             subdomain = list(self.ics_subdomains.keys())[i]
             print(f"  {i+1}: {subdomain}, {self.ics_subdomains[subdomain]}")
+
+    def write_to_file(self):
+        """Writes the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain to a file."""
+        with open('report.txt', 'w') as report_file:
+            print(f"1. number of unique pages: {len(self.urls)}", file=report_file)
+            print(f"2. longest page: {self.longest_page["url"]}", file=report_file)
+            print(f"3. top 50 words:", file=report_file)
+            top_50_words = self.get_most_common()
+
+            for i in range(len(top_50_words)):
+                word = list(top_50_words.keys())[i]
+                print(f"  {i+1}: {word}, {top_50_words[word]}", file=report_file)
+
+            print(f"4. number of ics.uci.edu subdomains: {len(self.ics_subdomains)}", file=report_file)
+
+            sorted_subdomains = {k: v for k, v in sorted(self.ics_subdomains.items(), key=lambda item: item[1], reverse = True)[:50]}
+            for i in range(len(sorted_subdomains)):
+                subdomain = list(sorted_subdomains.keys())[i]
+                print(f"  {i+1}: {subdomain}, {sorted_subdomains[subdomain]}", file=report_file)
             
