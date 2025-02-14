@@ -35,6 +35,10 @@ class Report:
         """Adds a url to the set of urls."""
         self.urls.add(url)
 
+    def remove_url(self, url):
+        """Adds a url to the set of urls."""
+        self.urls.remove(url)
+
     def add_large_url(self, url):
         """Adds a url to the set of urls."""
         self.large_urls.add(url)

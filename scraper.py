@@ -76,6 +76,8 @@ def scraper(url, resp, report:Report):
     # create a list of words in the webpage
     words = text.split()
 
+    
+
     #anything that is not alphanumeric is split and frequencies are counted
     report.set_frequency(re.split("[^a-zA-Z0-9]", text))
     # print(f"{YELLOW_TEXT}words: {report.get_most_common()}{RESET_TEXT}")
@@ -85,6 +87,21 @@ def scraper(url, resp, report:Report):
         report.set_longest_page(url, len(words))
         print(report.large_urls)
         # print(f"{YELLOW_TEXT}new longest page found: url: {report.longest_page['url']}, word count: {report.longest_page['count']}{RESET_TEXT}")
+
+    # checking size after comparing/ setting /finding longest pg
+    # func will compare num words found in pg against arbitrary threshhold
+    # large pgs will be removed from report.url, added to report.large_url
+    # idk if follows assignment reqs, should work when url does not have content-length tag 
+    #   (^^issue i ran into when trying chatpgt implement.)
+    if is_large(words.length(), 10000):
+        report.add_large_url(url)
+        report.remove_url(url)
+    """for non_text_elements in soup(["content-length"]):
+        non_text_elements.extract()
+    
+    text = soup.get_text()
+    lines = text.splitlines()
+    """
 
     # check if url is in ics domain
     if (get_domain(url) == "ics.uci.edu") and (get_subdomain(url) is not None):
@@ -192,6 +209,7 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
+# param should be accessible bc was parsed in first lines of is_valid()
 def get_content_length1(url): # basically chapgpt too, sigh ;-;
     host = url.netloc
     path = url.path if url.path else "/"
@@ -232,8 +250,7 @@ def get_content_length1(url): # basically chapgpt too, sigh ;-;
 """
 
 def is_large(content_length, threshhold):
-    threshhold_bytes = threshhold * 1024 * 1024
-    if content_length > threshhold_bytes:
+    if content_length > threshhold:
         return True  # The file is large
     return False
     
