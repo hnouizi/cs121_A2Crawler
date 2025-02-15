@@ -24,7 +24,6 @@ class Worker(Thread):
             tbd_url = self.frontier.get_tbd_url()
             if not tbd_url:
                 self.logger.info("Frontier is empty. Stopping Crawler.")
-                report.write_to_file()
                 break
             resp = download(tbd_url, self.config, self.logger)
             self.logger.info(

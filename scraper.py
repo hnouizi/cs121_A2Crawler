@@ -45,17 +45,35 @@ def get_subdomain(url):
     if (len(hostname_list) == 4):
         return hostname_list[0]
 
-    return None    
+    return None 
+
+def path_contains_individual_events(parsed_url):
+    path_list = parsed_url.path.split('/')
+    path_list = [path for path in path_list if path]
+
+    if "events" in path_list:
+        if path_list[-1] == "events":
+            return False
+
+        return True
+
+    if "event" in path_list:
+        if path_list[-1] == "event":
+            return False
+
+        return True
+
+    return False
     
 def scraper(url, resp, report:Report):
     # print terminal text
-    print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
-    if (resp.status >= 300) and (resp.status < 400):
-        print(f"{YELLOW_TEXT}{resp.status}{RESET_TEXT}")
-    elif (resp.status < 200) or (resp.status >= 400):
-        print(f"{RED_TEXT}{resp.status}{RESET_TEXT}")
-    else:
-        print(f"{GREEN_TEXT}{resp.status}{RESET_TEXT}")
+    # print(f"URL: {BLUE_TEXT}{url}{RESET_TEXT}, status: ", end="")
+    # if (resp.status >= 300) and (resp.status < 400):
+        # print(f"{YELLOW_TEXT}{resp.status}{RESET_TEXT}")
+    # elif (resp.status < 200) or (resp.status >= 400):
+        # print(f"{RED_TEXT}{resp.status}{RESET_TEXT}")
+    # else:
+        # print(f"{GREEN_TEXT}{resp.status}{RESET_TEXT}")
         
     # don't scrape if page couldn't be reached
     if (resp.status < 200) or (resp.status >= 300):
@@ -91,13 +109,17 @@ def scraper(url, resp, report:Report):
 
     # create a list of words in the webpage
     words = re.split("[^a-zA-Z0-9]", text)
+    # print(f"num of words: {YELLOW_TEXT}{len(words)}{RESET_TEXT}")
+    # print(f"num of chars per word: {YELLOW_TEXT}{len(text) / len(words)}{RESET_TEXT}")
 
     # don't scrape if the page is too small
     if len(words) < MIN_WORD_COUNT:
+        # print(f"{RED_TEXT}too few words: {len(words)}{RESET_TEXT}")
         return []
         
     # don't scrape if the page is too large
     if len(words) >= MAX_WORD_COUNT:
+        # print(f"{RED_TEXT}too many words: {len(words)}{RESET_TEXT}")
         return []
 
     # don't scrape if page has low textual information content
@@ -171,24 +193,7 @@ def extract_next_links(url, resp):
         extracted_links.append(extracted_link)
 
     return extracted_links
-
-def path_contains_individual_events(parsed_url):
-    path_list = parsed_url.path.split('/')
-    path_list = [path for path in path_list if path]
-
-    if "events" in path_list:
-        if path_list[-1] == "events":
-            return False
-
-        return True
-
-    if "event" in path_list:
-        if path_list[-1] == "event":
-            return False
-
-        return True
-
-    return False
+    
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -210,7 +215,7 @@ def is_valid(url):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|ppsx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
+            + r"|epub|dll|cnf|tgz|sha1|war|sql"
             + r"|thmx|mso|arff|rtf|jar|csv"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())):
                 return False
