@@ -13,8 +13,8 @@ RESET_TEXT = "\033[0m"
 urls_no_query = set()
 simhashes = dict()
 
-MAX_WORD_COUNT = 10000 # NOT TESTED
-MIN_WORD_COUNT = 10 # NOT TESTED
+MAX_WORD_COUNT = 20000
+MIN_WORD_COUNT = 100
 CHAR_PER_WORD_THRESH = [4, 7]
     
 def get_domain(url):
