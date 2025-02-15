@@ -82,10 +82,11 @@ class Report:
 
             print(f"4. number of ics.uci.edu subdomains: {len(self.ics_subdomains)}", file=report_file)
 
-            sorted_subdomains = {k: v for k, v in sorted(self.ics_subdomains.items(), key=lambda item: item[1], reverse = True)[:50]}
+            sorted_subdomains = sorted(self.ics_subdomains.items())
+
             for i in range(len(sorted_subdomains)):
-                subdomain = list(sorted_subdomains.keys())[i]
-                print(f"  {i+1}: {subdomain}, {sorted_subdomains[subdomain]}", file=report_file)
+                subdomain = sorted_subdomains[i]
+                print(f"  {i+1}: {subdomain[0]}, {subdomain[1]}", file=report_file)
 
     def print_report(self):
         """Prints the number of unique pages, the page with the largest number of words, the 50 most common words and their frequencies, and the number of subdomains in the ics.uci.edu domain."""
